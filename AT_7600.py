@@ -1,9 +1,8 @@
 import serial
 import time
 
-# ASCII art of a cell phone tower //replaced with a fucking cat because i could not find a decent cell tower ascii art.
+# ASCII art of a cat on the moon.
 cat_moon = r"""
-
          *                  *
              __                *
           ,db'    *     *
@@ -24,8 +23,6 @@ cat_moon = r"""
                 _) )    `. \ /
                (__/       ) )
                          (_/
-
-
 """
 
 def send_at_command(port, command):
@@ -44,13 +41,27 @@ def send_at_command(port, command):
 def make_call(port, phone_number):
     """
     Make a phone call to the specified phone number using the modem on the given COM port.
+    Hang up after 10 seconds.
     """
     try:
         with serial.Serial(port, 115200, timeout=1) as ser:
-            ser.write(f'ATD{phone_number};\r\n'.encode())  # Dial command
+            # Dial command
+            ser.write(f'ATD{phone_number};\r\n'.encode())
             time.sleep(5)  # Wait for the call to be established
             response = ser.read_all()
-            return "Call initiated" if b'OK' in response else "Failed to initiate call"
+
+            if b'OK' not in response:
+                return "Failed to initiate call"
+
+            # Wait for 10 seconds before hanging up
+            time.sleep(10)
+
+            # Send the hang-up command
+            ser.write(b'AT+CHUP\r\n')
+            time.sleep(1)
+            hangup_response = ser.read_all()
+
+            return "Call initiated and hung up after 10 seconds"
     except Exception as e:
         return f"Error: {e}"
 
